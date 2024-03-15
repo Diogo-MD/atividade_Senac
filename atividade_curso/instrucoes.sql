@@ -1,40 +1,199 @@
 ################## DDL
+CREATE DATABASE desafio;
+USE desafio;
 -- 1. Crie uma tabela chamada Fornecedor para armazenar informações sobre os fornecedores do sistema.
 -- id, nome, endereço, telefone, email e uma observação (text)
 
+	CREATE TABLE IF NOT EXISTS Fornecedor (
+		ID INT AUTO_INCREMENT PRIMARY KEY,
+        NOME VARCHAR(100) NOT NULL,
+        ENDERECO VARCHAR(100) NOT NULL,
+        TELEFONE VARCHAR (20) NOT NULL,
+        EMAIL VARCHAR(50) NOT NULL,
+        OBSERVACAO TEXT
+    );
 
 -- 2. Adicione uma coluna chamada CNPJ à tabela Fornecedor para armazenar os números de CNPJ dos fornecedores.
-
+	ALTER TABLE Fornecedor
+    ADD COLUMN CNPJ VARCHAR(30);
 
 -- 3. Adicione uma chave estrangeira à tabela Fornecedor para relacioná-la à tabela Categoria, representando a categoria do fornecedor.
-
+	ALTER TABLE Fornecedor
+    ADD COLUMN Categoria INT NOT NULL
+    REFERENCES Categoria(ID);
 
 -- 4. Modifique o tipo da coluna Telefone na tabela Fornecedor para armazenar números de telefone com no máximo 15 caracteres.
-
+	ALTER TABLE Fornecedor MODIFY COLUMN TELEFONE VARCHAR(15);
 
 -- 5. Remova a coluna Observacao da tabela Fornecedor, pois não é mais necessária.
-
-
+	ALTER TABLE FORNECEDOR
+	DROP COLUMN OBSERVACAO;
+    
 -- 6. Remova a tabela Fornecedor do banco de dados, se existir.
-
+	DROP TABLE Fornecedor;
 
 #################### DML
+
+-- Criação do banco de dados
+	CREATE DATABASE IF NOT EXISTS sistema_vendas_desafio;
+	USE sistema_vendas_desafio;
+
+-- Tabela Categoria
+	CREATE TABLE IF NOT EXISTS Categoria (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        Nome VARCHAR (100) NOT NULL,
+        Descricao TEXT,
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+        Ativo TINYINT (1) DEFAULT 1
+    );
+    
+-- Tabela FormaPagamento
+	CREATE TABLE IF NOT EXISTS FormaPagamento (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        Nome VARCHAR(100) NOT NULL,
+        Descricao TEXT,
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+        Ativo TINYINT(1) DEFAULT 1
+    );
+    
+-- Tabela Produto
+	CREATE TABLE IF NOT EXISTS Produto (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        Nome VARCHAR(100) NOT NULL,
+        Descricao TEXT,
+		Preco DECIMAL(10,2) NOT NULL,
+		CategoriaID INT,
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+        Ativo TINYINT(1) DEFAULT 1,
+        INDEX idx_nome (Nome), -- Adiciona indrice nas colunas Nome e Descricao
+        CONSTRAINT fk_categoria_produto FOREIGN KEY (CategoriaID) REFERENCES Categoria(Id)
+    );
+    
+-- Tabela Cliente
+	CREATE TABLE IF NOT EXISTS Cliente (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        Nome VARCHAR(100) NOT NULL,
+        Email VARCHAR(100),
+        Telefone VARCHAR(20),
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+        Ativo TINYINT(1) DEFAULT 1,
+        INDEX idx_nome (Nome)
+    );
+    
+-- Tabela Pedido
+	CREATE TABLE IF NOT EXISTS Pedido (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        ClienteID INT,
+        DataPedido DATETIME,
+        FormaPagamentoId INT,
+		Status VARCHAR(50),
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+		FOREIGN KEY (ClienteId) REFERENCES Cliente(Id),
+        FOREIGN KEY (FormaPagamentoId) REFERENCES FormaPagamento(Id)
+	);
+    
+-- Tabela ItemPedido
+	CREATE TABLE IF NOT EXISTS ItemPedido (
+		Id INT AUTO_INCREMENT PRIMARY KEY,
+        PedidoId INT,
+        ProdutoId INT,
+        Quantidade INT,
+        DataCriacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+        DataAtualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UsuarioAtualizacao INT,
+        FOREIGN KEY (PedidoId) REFERENCES Pedido(Id),
+        FOREIGN KEY (ProdutoId) REFERENCES Produto(Id)
+    );
+    
 -- 0. Crie ao menos 5 registros para cada tabela, ignorando o gerneciamento de usuários. Um dos clientes deverá ter o seu nome
+	
+    -- Inserts para a tabela Categoria
+INSERT INTO Categoria (Nome, Descricao, UsuarioAtualizacao)
+VALUES ('Eletrônicos', 'Produtos eletrônicos diversos', 1),
+       ('Roupas', 'Roupas masculinas e femininas', 1),
+       ('Alimentos', 'Diversos tipos de alimentos', 1),
+       ('Livros', 'Livros de diversos gêneros', 1),
+       ('Acessórios', 'Acessórios para diversos fins', 1);
+
+-- Inserts para a tabela FormaPagamento
+INSERT INTO FormaPagamento (Nome, Descricao, UsuarioAtualizacao)
+VALUES ('Cartão de Crédito', 'Pagamento via cartão de crédito', 1),
+       ('Dinheiro', 'Pagamento em dinheiro', 1),
+       ('Transferência Bancária', 'Pagamento via transferência bancária', 1),
+       ('Pix', 'Pagamento via Pix', 1),
+       ('Boleto Bancário', 'Pagamento via boleto bancário', 1);
+
+-- Inserts para a tabela Produto
+INSERT INTO Produto (Nome, Descricao, Preco, CategoriaID, UsuarioAtualizacao)
+VALUES ('Smartphone', 'Telefone inteligente', 999.99, 1, 1),
+       ('Camiseta', 'Camiseta casual', 29.99, 2, 1),
+       ('Arroz', 'Arroz branco tipo 1', 5.99, 3, 1),
+       ('1984', 'Livro de George Orwell', 19.99, 4, 1),
+       ('Relógio', 'Relógio de pulso', 49.99, 5, 1);
+
+-- Inserts para a tabela Cliente
+INSERT INTO Cliente (Nome, Email, Telefone, UsuarioAtualizacao)
+VALUES ('João Silva', 'joao@example.com', '123456789', 1),
+       ('Maria Souza', 'maria@example.com', '987654321', 1),
+       ('Carlos Oliveira', 'carlos@example.com', '456789123', 1),
+       ('Ana Santos', 'ana@example.com', '321654987', 1),
+       ('Pedro Costa', 'pedro@example.com', '789123456', 1);
+
+-- Inserts para a tabela Pedido
+INSERT INTO Pedido (ClienteID, DataPedido, FormaPagamentoId, Status, UsuarioAtualizacao)
+VALUES (1, '2024-03-15 10:00:00', 1, 'Em processamento', 1),
+       (2, '2024-03-15 11:00:00', 2, 'Pago', 1),
+       (3, '2024-03-15 12:00:00', 3, 'Aguardando confirmação', 1),
+       (4, '2024-03-15 13:00:00', 4, 'Enviado', 1),
+       (5, '2024-03-15 14:00:00', 5, 'Entregue', 1);
+
+-- Inserts para a tabela ItemPedido
+INSERT INTO ItemPedido (PedidoId, ProdutoId, Quantidade, UsuarioAtualizacao)
+VALUES (1, 1, 2, 1),
+       (2, 3, 1, 1),
+       (3, 5, 3, 1),
+       (4, 2, 2, 1),
+       (5, 4, 1, 1);
+
 
 -- 1. Atualizar o nome de um cliente:
 
+    UPDATE Cliente
+    SET Nome = 'Junin do Pneu'
+    WHERE ID = 1;
 
 -- 2. Deletar um produto:
 
+	DELETE FROM produto
+    WHERE ID = 2;
+    
 
 -- 3. Alterar a categoria de um produto:
 
+	UPDATE Categoria
+    SET 
+    WHERE ID = 1;
 
 -- 4. Inserir um novo cliente:
-
-
+	
+    INSERT INTO cliente (Nome, Email, Telefone, UsuarioAtualizacao)
+    VALUES ('Novo Cliente', 'cliente@mail.com', '40028922', 1);
+    
 -- 5. Inserir um novo pedido:
-
+	SELECT * FROM PEDIDO;
+    
+    INSERT INTO PEDIDO (ClienteID, DataPedido, FormaPagamentoId, Status, UsuarioAtualizacao)
+    VALUES (5, '2024-03-15 14:00:00', 5, 'Entregue', 1)
 
 -- 6. Atualizar o preço de um produto:
 
